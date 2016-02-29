@@ -15,44 +15,21 @@ class HackerRank():
 		self.url = 'https://www.hackerrank.com/rest/contests/master/challenges/%s/compile_tests'%problem
 		self.submissionId = None
 
-	def getCredentials(self):
-   		from os.path import expanduser
-   	  	import os
-	  	home = expanduser("~")+'/'
-
-	  	try:
-	  		f = open(home+'account.txt', 'r')
-	  	except IOError:
-	  		return None, None, None
-	  	text = f.readlines()
-	  	return True, text[0], text[1]
-	
-	def getParams(self, username, password):
-	  authController = urllib2.HTTPBasicAuthHandler()
-	  authController.add_password( realm=None, uri=basicUrl, user=username, passwd=password)
-	  opener = urllib2.build_opener(authController)
-	  urllib2.install_opener(opener)
-	  return
-
 	def run(self):
-		status, username, password = self.getCredentials()
-		if not status:
-   	  		print "[Error] : Enter your username & password in home/account.txt' \n\n"
-   	  		return
-   	  	'''self.getParams(username.strip('\n'), password.strip('\n'))'''
    	  	try:
-   	  		jsonRequest = {"code":self.code,"language":self.lang,"customtestcase":'false'}
+   	  		jsonRequest = {'code':self.code,'language':self.lang,'customtestcase':'false'}
    	  		sock = urllib2.Request(self.url, urllib.urlencode(jsonRequest))
 	 		resp = urllib2.urlopen(sock)
 	  		header = JSON.loads(resp.read())
 	  		print header
+	  		print self.url
 	  		codeId = header['model']['id']
 	  		url = self.url+'/'+str(codeId)+'?_'
 	  		print url
 	  		sock = urllib2.Request(url)
 	  		jsonResponse = 'NULL'
 	  		i = 0
-	  		while i < 4:
+	  		while i < 5:
 	  			resp = urllib2.urlopen(sock)
 	  			jsonResponse = JSON.loads(resp.read())
 	  			print jsonResponse
