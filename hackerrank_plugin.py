@@ -39,28 +39,32 @@ class HackerRank():
 		if not status:
    	  		print "[Error] : Enter your username & password in home/account.txt' \n\n"
    	  		return
-   	  	self.getParams(username.strip('\n'), password.strip('\n'))
+   	  	'''self.getParams(username.strip('\n'), password.strip('\n'))'''
    	  	try:
    	  		jsonRequest = {"code":self.code,"language":self.lang,"customtestcase":'false'}
    	  		sock = urllib2.Request(self.url, urllib.urlencode(jsonRequest))
 	 		resp = urllib2.urlopen(sock)
-	  		header = resp.read()
-	  		header = JSON.loads(header)
+	  		header = JSON.loads(resp.read())
+	  		print header
 	  		codeId = header['model']['id']
-	  		sock = urllib2.Request(self.url + '/' + str(codeId) + '?')
+	  		url = self.url+'/'+str(codeId)+'?_'
+	  		print url
+	  		sock = urllib2.Request(url)
 	  		jsonResponse = 'NULL'
 	  		i = 0
 	  		while i < 4:
 	  			resp = urllib2.urlopen(sock)
 	  			jsonResponse = JSON.loads(resp.read())
-	  			if len(jsonResponse['model']['testcase_message']) is not 0:
-	  				break
-	  			else:
-	  				time.sleep(1)
-	  				if i > 8:
-	  					print "\n\nCONNECTION TIMED OUT\n\n"
-	  					return
-	  				i += 1
+	  			print jsonResponse
+	  			if jsonResponse['status']:
+	  				if len(jsonResponse['model']['testcase_message']) is not 0:
+	  					break
+	  				else:
+	  					time.sleep(1)
+	  					if i > 8:
+	  						print "\n\nCONNECTION TIMED OUT\n\n"
+	  						return
+	  			i += 1
 	  		self.printOutput(codeId, jsonResponse)
 	  	except (urllib2.HTTPError) as (e):
 			print "Something went wrong. Check the problem slug"
@@ -83,7 +87,7 @@ class RunCommand(sublime_plugin.TextCommand):
 		extension = fileName.split('.')[1]
 		fName = fileName.split('.')[0]
 		language = lang[extension]
-		return language, fileName
+		return language, fName
 
 	def getFileCode(self):
 		content = self.view.substr(sublime.Region(0, self.view.size()))
