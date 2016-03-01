@@ -3,10 +3,24 @@ import urllib2, httplib, urllib
 import json as JSON
 import time
 import Cookie
+import base64
 
 basicUrl = 'https://www.hackerrank.com/rest/contests/'
 
 lang = {'py':'python', 'java':'java', 'c':'c', 'cpp':'cpp'}
+
+class CustomBasicAuthHandler(urllib2.HTTPBasicAuthHandler):
+	def http_request(self, req):
+		url = req.get_full_url()
+		realm = None
+		user, pw = self.passwd.find_user_password(realm, url)
+		if pw:
+			raw = "%s:%s" % (user, pw)
+			auth = 'Basic %s' % base64.b64encode(raw).strip()
+			req.add_unredirected_header(self.auth_header, auth)
+		return req
+
+	https_request = http_request
 
 class HackerRank():
 	def __init__(self, problem, lang, code):
@@ -90,12 +104,32 @@ class RunCommand(sublime_plugin.TextCommand):
 		language = lang[extension]
 		return language, fName
 
+	def getCredentials(self):
+   	  	from os.path import expanduser
+   	  	import os
+	  	home = expanduser("~")+'/'
+	  	try:
+	  		f = open(home+'account.txt', 'r')
+	  	except IOError:
+	  		return None, None, None
+	  	lines = f.readlines()
+	  	return lines[0], lines[1]
+	  	
+	def getParams(self, username, password):
+	  	auth_handler = CustomBasicAuthHandler()
+	  	auth_handler.add_password( realm=None, uri=basicUrl, user=username, passwd=password)
+	  	opener = urllib2.build_opener(auth_handler)
+	  	urllib2.install_opener(opener)
+	  	return
+  	
 	def getFileCode(self):
 		content = self.view.substr(sublime.Region(0, self.view.size()))
 		return content
 
 	def run(self, edit):
 		print "Process started"
+		username, password = self.getCredentials()
+		self.getParams(username.strip('\n'), password.strip('\n'))
 		extension, fileName = self.getFileExtension()
 		code = self.getFileCode()
 		if extension == None:
