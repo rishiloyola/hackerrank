@@ -1,7 +1,8 @@
 # hackerrank
 ##Run
 1. Keep the file name and problem name same.
-2. Open the console and print the following command.
+2. Add your credentials in /Home/account.txt file. 
+3. Open the console and print the following command.
 ```
 view.run_command("run")
 ```
