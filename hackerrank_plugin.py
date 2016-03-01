@@ -2,6 +2,7 @@ import sublime, sublime_plugin
 import urllib2, httplib, urllib
 import json as JSON
 import time
+import Cookie
 
 basicUrl = 'https://www.hackerrank.com/rest/contests/'
 
@@ -14,44 +15,67 @@ class HackerRank():
 		self.lang = lang
 		self.url = 'https://www.hackerrank.com/rest/contests/master/challenges/%s/compile_tests'%problem
 		self.submissionId = None
+		self.submitted = False
+		self.cookie = None
 
 	def run(self):
+		jsonResponse = 'NULL'
+		count = 0
+		i = 0
+
    	  	try:
    	  		jsonRequest = {'code':self.code,'language':self.lang,'customtestcase':'false'}
-   	  		sock = urllib2.Request(self.url, urllib.urlencode(jsonRequest))
-	 		resp = urllib2.urlopen(sock)
-	  		header = JSON.loads(resp.read())
-	  		print header
-	  		print self.url
-	  		codeId = header['model']['id']
-	  		url = self.url+'/'+str(codeId)+'?_'
-	  		print url
+   	  		data = urllib.urlencode(jsonRequest)
+   	  		httpResponse = urllib2.urlopen(self.url, data)
+   	  		print "Requesting on %s"%self.url
+   	  		response = JSON.loads(httpResponse.read())
+
+	  		while  self.submitted == False and count<5:
+				count = count + 1
+				if response['status']:
+					header = httpResponse.info()
+					cookie = Cookie.SimpleCookie(header['Set-Cookie'])
+					self.cookie = "hackerrank_mixpanel_token=" + cookie['hackerrank_mixpanel_token'].value +";"+ "_hackerrank_session=" + cookie['_hackerrank_session'].value + ";"
+					if response['model']['id']:
+						self.submissionId = response['model']['id']
+						self.submitted = True
+						print "Code is successfully Submitted."
+						print "[SubmissionId] : %s"%self.submissionId
+					else:
+						print "Error occurred during code submission. Wait! and let me try again"
+						time.sleep(1)
+			if self.submitted == False:
+				print "[Failed] : Could not submit your code, try again"
+
+	  		url = self.url+'/'+str(self.submissionId)+'?_'
 	  		sock = urllib2.Request(url)
-	  		jsonResponse = 'NULL'
-	  		i = 0
+			sock.add_header('Cookie', self.cookie)
+
 	  		while i < 5:
-	  			resp = urllib2.urlopen(sock)
-	  			jsonResponse = JSON.loads(resp.read())
+	  			response = urllib2.urlopen(sock)
+	  			jsonResponse = JSON.loads(response.read())
 	  			print jsonResponse
 	  			if jsonResponse['status']:
-	  				if len(jsonResponse['model']['testcase_message']) is not 0:
+	  				if len(jsonResponse['model']) is not 0:
 	  					break
 	  				else:
 	  					time.sleep(1)
 	  					if i > 8:
-	  						print "\n\nCONNECTION TIMED OUT\n\n"
+	  						print "\n\nTIMED OUT TRY AGAIN\n\n"
 	  						return
 	  			i += 1
-	  		self.printOutput(codeId, jsonResponse)
+	  		self.printOutput(jsonResponse)
 	  	except (urllib2.HTTPError) as (e):
 			print "Something went wrong. Check the problem slug"
 		except (urllib2.URLError) as (e):
 			print "Something went wrong buddy, try again"
 	
-	def printOutput(self, codeId, jsonResponse):
-		print "\n"+'SUBMISSION ID:', str(codeId)+"\n"
-		print "[Output] : "
-		print jsonResponse
+	def printOutput(jsonResponse):
+		if jsonResponse['status']:
+			print "[Output] : \n"
+			print jsonResponse['testcase_message']
+		else:
+			print "Compilation Error"
 
 
 class RunCommand(sublime_plugin.TextCommand):
