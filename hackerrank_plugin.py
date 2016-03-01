@@ -24,9 +24,11 @@ class HackerRank():
 		i = 0
 
    	  	try:
+   	  		self.cookie = "hackerrank_mixpanel_token=" + "676b366b-3e5a-4307-8a63-1e305a22d5e0" +";"+ "_hackerrank_session=" + "BAh7B0kiD3Nlc3Npb25faWQGOgZFVEkiJTUxMDFiOGVkNzg1YjQ3YzU3ZTU3ODhmMmRhYWFjYjA3BjsAVEkiEF9jc3JmX3Rva2VuBjsARkkiMUdDVTU4SXJQZEFoVTFPdkdyczA2ZVdiQ1RpK0R6Nm1iWGpCWEw3cUh4bXM9BjsARg%3D%3D--c9e2e544456a5de3ea27a200da56e6817fda4d21"+";"
    	  		jsonRequest = {'code':self.code,'language':self.lang,'customtestcase':'false'}
-   	  		data = urllib.urlencode(jsonRequest)
-   	  		httpResponse = urllib2.urlopen(self.url, data)
+   	  		sock = urllib2.Request(self.url,urllib.urlencode(jsonRequest))
+   	  		sock.add_header('Cookie', self.cookie)
+   	  		httpResponse = urllib2.urlopen(sock)
    	  		print "Requesting on %s"%self.url
    	  		response = JSON.loads(httpResponse.read())
 
@@ -34,8 +36,6 @@ class HackerRank():
 				count = count + 1
 				if response['status']:
 					header = httpResponse.info()
-					cookie = Cookie.SimpleCookie(header['Set-Cookie'])
-					self.cookie = "hackerrank_mixpanel_token=" + cookie['hackerrank_mixpanel_token'].value +";"+ "_hackerrank_session=" + cookie['_hackerrank_session'].value + ";"
 					if response['model']['id']:
 						self.submissionId = response['model']['id']
 						self.submitted = True
@@ -66,7 +66,7 @@ class HackerRank():
 	  			i += 1
 	  		self.printOutput(jsonResponse)
 	  	except (urllib2.HTTPError) as (e):
-			print "Something went wrong. Check the problem slug"
+			print "Something went wrong. Check the file name"
 		except (urllib2.URLError) as (e):
 			print "Something went wrong buddy, try again"
 	
