@@ -43,7 +43,7 @@ class HackerRank():
    	  		sock = urllib2.Request(self.url,urllib.urlencode(jsonRequest))
    	  		sock.add_header('Cookie', self.cookie)
    	  		httpResponse = urllib2.urlopen(sock)
-   	  		print "Requesting on %s"%self.url
+   	  		print "Submitting on %s"%self.url
    	  		response = JSON.loads(httpResponse.read())
 
 	  		while  self.submitted == False and count<5:
@@ -68,7 +68,6 @@ class HackerRank():
 	  		while i < 5:
 	  			response = urllib2.urlopen(sock)
 	  			jsonResponse = JSON.loads(response.read())
-	  			print jsonResponse
 	  			if jsonResponse['status']:
 	  				if len(jsonResponse['model']) is not 0:
 	  					break
@@ -84,10 +83,18 @@ class HackerRank():
 		except (urllib2.URLError) as (e):
 			print "Something went wrong buddy, try again"
 	
-	def printOutput(jsonResponse):
+	def printOutput(self, jsonResponse):
 		if jsonResponse['status']:
-			print "[Output] : \n"
-			print jsonResponse['testcase_message']
+			model = jsonResponse['model']
+			total = len(model['testcase_message'])
+			success = 0
+			print "[OUTPUT]"
+			for i in range(0, len(model['testcase_message'])):
+				if model['testcase_message'][i] == 'Success':
+					success = success + 1
+			print "Total Testcases: %d, Passed: %d"% (total, success)
+			for i in range(0, len(model['testcase_message'])):
+				print "Testcase #%d: %s"%(i+1, model['testcase_message'][i])
 		else:
 			print "Compilation Error"
 
